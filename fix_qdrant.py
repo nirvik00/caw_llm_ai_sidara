@@ -8,6 +8,9 @@
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import PayloadSchemaType
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from dotenv import load_dotenv
 import os
 
