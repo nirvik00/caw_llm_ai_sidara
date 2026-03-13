@@ -40,40 +40,6 @@ section[data-testid="stSidebar"] .stButton > button { width: 100% !important; }
 p, li, span, div { color: #ffffff; }
 h1, h2, h3 { color: #7dd3fc; }
 
-/* Move collapsed chevron to vertical middle — large and visible */
-[data-testid="collapsedControl"] {
-    position: fixed !important;
-    top: 50% !important;
-    left: 0 !important;
-    transform: translateY(-50%) !important;
-    z-index: 99999 !important;
-    background: #1e3a5f !important;
-    border: 1px solid #1e6fa8 !important;
-    border-radius: 0 6px 6px 0 !important;
-    padding: 20px 12px !important;
-    width: 40px !important;
-    height: 80px !important;
-}
-[data-testid="collapsedControl"],
-[data-testid="collapsedControl"]:hover,
-[data-testid="collapsedControl"]:focus,
-[data-testid="collapsedControl"]:active { opacity: 1 !important; transition: none !important; }
-[data-testid="collapsedControl"] svg,
-[data-testid="collapsedControl"]:hover svg,
-[data-testid="collapsedControl"]:focus svg,
-[data-testid="collapsedControl"]:active svg { fill: #ffffff !important; opacity: 1 !important; transition: none !important; width: 24px !important; height: 24px !important; }
-
-/* Fix white bars — keep chevron visible */
-[data-testid="stToolbar"] { background-color: #0a0f1e !important; }
-[data-testid="stStatusWidget"] { display: none !important; }
-#MainMenu { display: none !important; }
-footer { background-color: #0a0f1e !important; color: #0a0f1e !important; }
-
-/* Bottom input area */
-[data-testid="stBottom"] { background-color: #0a0f1e !important; border-top: none !important; }
-[data-testid="stBottom"] > div { background-color: #0a0f1e !important; }
-[data-testid="stBottom"] * { background-color: #0a0f1e !important; }
-
 .metric-card { background: #0d1e35; border: 1px solid #1e4a7a; border-radius: 6px; padding: 12px 16px; margin: 4px 0; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 .metric-ok  { border-left: 3px solid #22c55e; }
 .metric-warn { border-left: 3px solid #f59e0b; }
@@ -212,25 +178,8 @@ def build_system_prompt(stats):
     return f"""You are a water billing verification assistant for BWWB (Birmingham Water Works Board).
 ## Rate Structure
 Base meter charges ($/month): {json.dumps(base_meter, indent=2)}
-Residential consumption rates — TIERED (split consumption across brackets):
-  - 0 CCF: $0.00
-  - 1-3 CCF: ${water_res['upto_3']} per CCF
-  - 4-12 CCF: ${water_res['4_to_12']} per CCF (only CCF above 3, up to 12)
-  - >12 CCF: ${water_res['greater_12']} per CCF (only CCF above 12)
-
-Formula (Python):
-  if consumption == 0:   charge = base
-  elif consumption <= 3: charge = base + (consumption x {water_res['upto_3']})
-  elif consumption <= 12:
-      charge = base + (3 x {water_res['upto_3']}) + ((consumption - 3) x {water_res['4_to_12']})
-  else:
-      charge = base + (3 x {water_res['upto_3']}) + (9 x {water_res['4_to_12']}) + ((consumption - 12) x {water_res['greater_12']})
-
-Examples:
-  3 CCF, 5/8_INCH: 28.49 + (3 x 2.96) = 28.49 + 8.88 = 37.37
-  4 CCF, 5/8_INCH: 28.49 + (3 x 2.96) + (1 x 4.91) = 28.49 + 8.88 + 4.91 = 42.28
-  5 CCF, 5/8_INCH: 28.49 + (3 x 2.96) + (2 x 4.91) = 28.49 + 8.88 + 9.82 = 47.19
-ALWAYS split consumption across tiers — never apply a single rate to total consumption.
+Residential consumption rates ($/CCF): 0 CCF=$0, 1-3 CCF=${water_res['upto_3']}, 4-12 CCF=${water_res['4_to_12']}, >12 CCF=${water_res['greater_12']}
+Formula: charge = base_meter[size] + (consumption x rate)
 {stats}
 ## Your Job
 1. LOOKUP queries: identify the row, explain monthly calculations, flag mismatches, summarize annual accuracy
