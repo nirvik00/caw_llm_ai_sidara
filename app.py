@@ -26,30 +26,57 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; background: #0a0f1e; color: #ffffff; }
 .stApp { background: #0a0f1e; }
 
-/* Sidebar */
-[data-testid="stSidebar"] { background: #0d1526; border-right: 1px solid #1e3a5f; min-width: 600px !important; max-width: 600px !important; }
-[data-testid="stSidebar"] * { color: #ffffff !important; }
-[data-testid="stSidebar"] .stButton > button { width: 100% !important; text-align: center !important; }
+/* Sidebar — draggable, default width 525px */
+section[data-testid="stSidebar"],
+[data-testid="stSidebar"],
+.css-1d391kg,
+.css-1lcbmhc {
+    background: #0d1526 !important;
+    border-right: 1px solid #1e3a5f !important;
+    min-width: 150px !important;
+    max-width: 800px !important;
+}
+section[data-testid="stSidebar"] * { color: #ffffff !important; }
+section[data-testid="stSidebar"] .stButton > button {
+    width: 100% !important;
+    text-align: center !important;
+}
 
 /* Chat messages */
-[data-testid="stChatMessage"] { background: #0f1e35 !important; border: 1px solid #1e3a5f; border-radius: 8px; margin-bottom: 8px; }
+[data-testid="stChatMessage"] {
+    background: #0f1e35 !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
 [data-testid="stChatMessage"] * { color: #ffffff !important; }
 
-/* Hide chat avatars 
-[data-testid="stChatMessageAvatarUser"] { display: none !important; }
-[data-testid="stChatMessageAvatarAssistant"] { display: none !important; }
-*/
-            
+/* Assistant message — green border */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+    border: 1px solid #166534 !important;
+}
 
 /* Chat input box */
 [data-testid="stChatInput"] { background: #000000 !important; }
-[data-testid="stChatInput"] textarea { background: #000000 !important; border: 1px solid #1e6fa8 !important; color: #ffffff !important; font-family: 'IBM Plex Mono', monospace !important; }
+[data-testid="stChatInput"] textarea {
+    background: #000000 !important;
+    border: 1px solid #1e6fa8 !important;
+    color: #ffffff !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+}
 [data-testid="stChatInput"] textarea::placeholder { color: #7dd3fc !important; }
 
-/* Bottom bar background */
-.stBottom { background: #000000 !important; }
-[data-testid="stBottom"] { background: #000000 !important; }
-section[data-testid="stBottom"] > div { background: #000000 !important; }
+/* Bottom bar background — all forms for Chrome */
+.stBottom { background: #0a0f1e !important; }
+[data-testid="stBottom"] { background: #0a0f1e !important; }
+section[data-testid="stBottom"] { background: #0a0f1e !important; }
+section[data-testid="stBottom"] > div { background: #0a0f1e !important; }
+[data-testid="stBottom"] > div { background: #0a0f1e !important; }
+[data-testid="stBottom"] * { background: #0a0f1e !important; }
+.stChatFloatingInputContainer { background: #0a0f1e !important; }
+.stChatInputContainer { background: #0a0f1e !important; }
+div[class*="chatInputContainer"] { background: #0a0f1e !important; }
+div[class*="bottom"] { background: #0a0f1e !important; }
 
 /* Hide deploy/HF icons */
 [data-testid="stToolbar"] { display: none !important; }
@@ -62,7 +89,16 @@ p, li, span, div { color: #ffffff; }
 h1, h2, h3 { font-family: 'IBM Plex Sans', sans-serif; color: #7dd3fc; }
 
 /* Metric cards */
-.metric-card { background: #0d1e35; border: 1px solid #1e4a7a; border-radius: 6px; padding: 12px 16px; margin: 4px 0; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #ffffff; }
+.metric-card {
+    background: #0d1e35;
+    border: 1px solid #1e4a7a;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 4px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #ffffff;
+}
 .metric-ok   { border-left: 3px solid #22c55e; }
 .metric-warn { border-left: 3px solid #f59e0b; }
 .metric-bad  { border-left: 3px solid #ef4444; }
@@ -78,9 +114,28 @@ code { background: #1e3a5f !important; color: #7dd3fc !important; font-family: '
 
 /* Tables */
 table { color: #ffffff !important; }
-th { color: #7dd3fc !important; }
+th { color: #7dd3fc !important; background: #0d1e35 !important; }
 td { color: #ffffff !important; }
+tr { border-bottom: 1px solid #1e3a5f !important; }
 </style>
+""", unsafe_allow_html=True)
+
+# ── JS: enforce sidebar width cross-browser ───────────────────────────────────
+st.markdown("""
+<script>
+function setSidebarWidth() {
+    const sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    if (sidebar && sidebar.offsetWidth < 400) {
+        sidebar.style.width = '525px';
+        sidebar.style.minWidth = '';
+        sidebar.style.maxWidth = '';
+        sidebar.style.flex = '';
+    }
+}
+setSidebarWidth();
+setTimeout(setSidebarWidth, 500);
+setTimeout(setSidebarWidth, 1500);
+</script>
 """, unsafe_allow_html=True)
 
 # ── Password gate ─────────────────────────────────────────────────────────────
@@ -133,12 +188,8 @@ def load_dataframe():
         repo_type="dataset",
         token=hf_token,
     )
-    # Read all as str first to avoid type conflicts
     df = pd.read_csv(path, dtype=str, low_memory=False)
     df.columns = [c.strip() for c in df.columns]
-
-    # Keep POD as string
-    # Convert numeric columns
     numeric_cols = (
         ["totalBilled", "totalBilledRev", "verification"] +
         [c for c in df.columns if any(x in c for x in
@@ -147,7 +198,6 @@ def load_dataframe():
     for col in numeric_cols:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-
     return df
 
 # ── Dataset stats ─────────────────────────────────────────────────────────────
@@ -162,7 +212,6 @@ def compute_stats(df: pd.DataFrame) -> str:
     total_billed    = df["totalBilled"].sum()
     mismatch_count  = int((df["has_mismatch"] == "True").sum()) if "has_mismatch" in df.columns else None
     mismatch_str    = f"{mismatch_count:,}" if mismatch_count is not None else "N/A"
-
     return f"""
 ## Dataset Statistics (full dataset)
 - Total billing rows: {total_rows:,}
@@ -190,7 +239,6 @@ def is_aggregate_query(query: str) -> bool:
 def answer_aggregate(df: pd.DataFrame, query: str) -> str:
     q = query.lower()
     lines = ["Aggregate query results from full dataset:"]
-
     if "how many meter" in q or "count meter" in q:
         lines.append(f"Unique meters: {df['Meter'].nunique():,}")
     if "how many premise" in q or "count premise" in q:
@@ -216,11 +264,8 @@ def answer_aggregate(df: pd.DataFrame, query: str) -> str:
         lines.append(f"Meter size breakdown: {df['Size'].value_counts().to_dict()}")
     if "rate" in q or "category" in q:
         lines.append(f"Rate category breakdown: {df['RateCategoryKey'].value_counts().to_dict()}")
-
-    # Fallback — return full stats
     if len(lines) == 1:
         lines.append(compute_stats(df))
-
     return "\n".join(lines)
 
 # ── System prompt ─────────────────────────────────────────────────────────────
