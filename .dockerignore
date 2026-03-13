@@ -1,0 +1,10 @@
+.venv/
+.env
+output/
+csv/
+chroma_db/
+qdrant_db/
+__pycache__/
+*.pyc
+ingest.py
+fix_qdrant.py
